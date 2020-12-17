@@ -1,0 +1,1 @@
+# ansible-vault-differ
