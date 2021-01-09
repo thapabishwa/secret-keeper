@@ -1,0 +1,45 @@
+{
+  "projectName": "vault-differ",
+  "projectOwner": "everesthack-incubator",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 50,
+  "commit": true,
+  "commitConvention": "none",
+  "contributors": [
+    {
+      "login": "thapabishwa",
+      "name": "Bishwa Thapa",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/15176360?v=4",
+      "profile": "https://www.thapabishwa.de/",
+      "contributions": [
+        "code",
+        "doc",
+        "example",
+        "ideas",
+        "maintenance",
+        "platform",
+        "research"
+      ]
+    },
+    {
+      "login": "Kripesh4569",
+      "name": "Kripesh Dhakal",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/11332619?v=4",
+      "profile": "https://github.com/Kripesh4569",
+      "contributions": [
+        "bug",
+        "code",
+        "doc",
+        "example",
+        "ideas",
+        "platform",
+        "review"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
