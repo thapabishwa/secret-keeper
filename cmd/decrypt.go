@@ -19,7 +19,7 @@ var decryptCmd = &cobra.Command{
 
 var decryptCmdRun = func(cmd *cobra.Command, args []string) {
 	vaultInstance.MatchFiles()
-	if len(vaultInstance.decryptArgs) == 0 || vaultInstance.vaultTool == "" {
+	if len(vaultInstance.GetEncryptArgs()) == 0 || vaultInstance.GetVaultCommand() == "" {
 		log.Fatalf("vault tools not defined properly")
 	} else {
 		vaultInstance.Decrypt()

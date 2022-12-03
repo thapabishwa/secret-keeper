@@ -1,4 +1,4 @@
-package cmd
+package config
 
 // Config represents the config struct
 type Config struct {

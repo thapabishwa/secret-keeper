@@ -1,12 +1,15 @@
-package cmd
+package vault
 
 import (
 	"sync"
 
+	"github.com/everesthack-incubator/vault-differ/pkg/config"
+	"github.com/everesthack-incubator/vault-differ/pkg/utils"
+
 	log "github.com/sirupsen/logrus"
 )
 
-//VaultDiffer represents the config
+// VaultDiffer represents the config
 type VaultDiffer struct {
 	secrets          []string
 	logLevel         log.Level
@@ -22,8 +25,20 @@ func NewVaultDiffer() *VaultDiffer {
 	return &VaultDiffer{}
 }
 
+func (a *VaultDiffer) GetEncryptArgs() []string {
+	return a.encryptArgs
+}
+
+func (a *VaultDiffer) GetDecryptArgs() []string {
+	return a.decryptArgs
+}
+
+func (a *VaultDiffer) GetVaultCommand() string {
+	return a.vaultTool
+}
+
 // InitConfig Reads and Updates all config
-func (a *VaultDiffer) InitConfig(config Config) {
+func (a *VaultDiffer) InitConfig(config config.Config) {
 	a.secrets = config.Secrets
 	a.vaultTool = config.VaultTool
 	a.encryptArgs = config.EncryptArgs
@@ -40,7 +55,7 @@ func (a *VaultDiffer) MatchFiles() {
 	var wg sync.WaitGroup
 	for i := 0; i < len(a.secrets); i++ {
 		wg.Add(1)
-		go FileList(a.secrets[i], c, &wg, a.logLevel)
+		go utils.FileList(a.secrets[i], c, &wg, a.logLevel)
 	}
 	wg.Wait()
 	close(c)
@@ -55,7 +70,7 @@ func (a *VaultDiffer) Differ() {
 	var wg sync.WaitGroup
 	for _, elem := range a.matchedFiles {
 		wg.Add(1)
-		go gitDiffCommands(elem, c, &wg, a.logLevel)
+		go utils.GitDiffCommands(elem, c, &wg, a.logLevel)
 
 	}
 	wg.Wait()
@@ -74,7 +89,7 @@ func (a *VaultDiffer) Clean() {
 	var wg sync.WaitGroup
 	for _, elem := range a.restoreableFiles {
 		wg.Add(1)
-		go gitRestoreCommands(elem, c, &wg, a.logLevel, &m)
+		go utils.GitRestoreCommands(elem, c, &wg, a.logLevel, &m)
 	}
 	wg.Wait()
 	close(c)
@@ -87,7 +102,7 @@ func (a *VaultDiffer) Encrypt() {
 	var m sync.RWMutex
 	for _, elem := range a.matchedFiles {
 		wg.Add(1)
-		go vaultToolCmd(elem, &wg, a.vaultTool, a.encryptArgs, c, &m)
+		go utils.VaultToolCmd(elem, &wg, a.vaultTool, a.encryptArgs, c, &m)
 	}
 	wg.Wait()
 	close(c)
@@ -100,7 +115,7 @@ func (a *VaultDiffer) Decrypt() {
 	var m sync.RWMutex
 	for _, elem := range a.matchedFiles {
 		wg.Add(1)
-		go vaultToolCmd(elem, &wg, a.vaultTool, a.decryptArgs, c, &m)
+		go utils.VaultToolCmd(elem, &wg, a.vaultTool, a.decryptArgs, c, &m)
 	}
 	wg.Wait()
 	close(c)

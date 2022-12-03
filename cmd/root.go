@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/everesthack-incubator/vault-differ/pkg/config"
+	"github.com/everesthack-incubator/vault-differ/pkg/vault"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,9 +22,8 @@ var (
 		Long:  `vault-differ is a CLI tool that complements tools like ansible-vault, sops and more. It helps in managing and storing secrets in git-based repositories.`,
 	}
 
-	vaultInstance = NewVaultDiffer()
-
-	config = NewConfig()
+	vaultInstance  = vault.NewVaultDiffer()
+	configurations = config.NewConfig()
 )
 
 // Execute executes the root command.
@@ -36,11 +37,6 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ansible-vault-differ/config.yaml)")
 
-}
-
-func er(msg interface{}) {
-	fmt.Println("Error:", msg)
-	os.Exit(1)
 }
 
 func initConfig() {
@@ -69,12 +65,12 @@ func initConfig() {
 		}
 	}
 
-	err := viper.Unmarshal(config)
+	err := viper.Unmarshal(configurations)
 
 	if err != nil {
 		log.Fatal("cannot unmarshal config file")
 	}
 
-	vaultInstance.InitConfig(*config)
+	vaultInstance.InitConfig(*configurations)
 
 }
