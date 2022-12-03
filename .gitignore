@@ -2,3 +2,4 @@ ansible-vault-differ
 .idea/
 config.yaml
 .vscode/
+vault-differ
