@@ -1,4 +1,4 @@
-package cmd
+package utils
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ func FileList(globPattern string, c chan []string, wg *sync.WaitGroup, logLevel 
 	c <- files
 }
 
-func gitDiffCommands(filename string, c chan string, wg *sync.WaitGroup, logLevel log.Level) {
+func GitDiffCommands(filename string, c chan string, wg *sync.WaitGroup, logLevel log.Level) {
 	defer wg.Done()
 	log.SetLevel(logLevel)
 	args := []string{"diff"}
@@ -59,7 +59,7 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func gitRestoreCommands(filename string, c chan bool, wg *sync.WaitGroup, logLevel log.Level, m *sync.RWMutex) {
+func GitRestoreCommands(filename string, c chan bool, wg *sync.WaitGroup, logLevel log.Level, m *sync.RWMutex) {
 	defer wg.Done()
 	log.SetLevel(logLevel)
 	args := []string{"restore", filename}
@@ -78,7 +78,7 @@ func gitRestoreCommands(filename string, c chan bool, wg *sync.WaitGroup, logLev
 	c <- true
 }
 
-func vaultToolCmd(file string, wg *sync.WaitGroup, cmd string, args []string, c chan bool, m *sync.RWMutex) {
+func VaultToolCmd(file string, wg *sync.WaitGroup, cmd string, args []string, c chan bool, m *sync.RWMutex) {
 	defer wg.Done()
 	log.Debugln("commands/arguments/files", cmd, args, file)
 	m.Lock()
