@@ -39,15 +39,6 @@ func GitDiffCommands(filename string, c chan string, wg *sync.WaitGroup, logLeve
 
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	log.Debugf("stating gitdiff: %s", info)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
 func GitRestoreCommands(filename string, c chan bool, wg *sync.WaitGroup, logLevel log.Level, m *sync.RWMutex) {
 	defer wg.Done()
 	log.SetLevel(logLevel)
