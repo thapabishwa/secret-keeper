@@ -4,20 +4,18 @@ import (
 	"sync"
 
 	"github.com/everesthack-incubator/vault-differ/pkg/config"
-	"github.com/everesthack-incubator/vault-differ/pkg/utils"
+	"github.com/everesthack-incubator/vault-differ/pkg/helpers"
 
 	log "github.com/sirupsen/logrus"
 )
 
 // VaultDiffer represents the config
 type VaultDiffer struct {
-	secrets          []string
-	logLevel         log.Level
-	matchedFiles     []string
-	restoreableFiles []string
-	vaultTool        string
-	encryptArgs      []string
-	decryptArgs      []string
+	secrets     []string
+	logLevel    log.Level
+	vaultTool   string
+	encryptArgs []string
+	decryptArgs []string
 }
 
 // NewVaultDiffer returns an empty instance of VaultDiffer
@@ -43,6 +41,7 @@ func (a *VaultDiffer) InitConfig(config config.Config) {
 	a.vaultTool = config.VaultTool
 	a.encryptArgs = config.EncryptArgs
 	a.decryptArgs = config.DecryptArgs
+	a.logLevel = log.InfoLevel
 	if config.Debug {
 		a.logLevel = log.DebugLevel
 	}
@@ -50,73 +49,93 @@ func (a *VaultDiffer) InitConfig(config config.Config) {
 }
 
 // MatchFiles populates list of files that match the pattern provided in the config
-func (a *VaultDiffer) MatchFiles() {
-	c := make(chan []string, 100000)
-	var wg sync.WaitGroup
-	for i := 0; i < len(a.secrets); i++ {
-		wg.Add(1)
-		go utils.FileList(a.secrets[i], c, &wg, a.logLevel)
-	}
-	wg.Wait()
-	close(c)
-	for elem := range c {
-		a.matchedFiles = append(a.matchedFiles, elem...)
-	}
-}
-
-// Differ Runs compares the files
-func (a *VaultDiffer) Differ() {
-	c := make(chan string, 100000)
-	var wg sync.WaitGroup
-	for _, elem := range a.matchedFiles {
-		wg.Add(1)
-		go utils.GitDiffCommands(elem, c, &wg, a.logLevel)
-
-	}
-	wg.Wait()
-	close(c)
-
-	for elem := range c {
-		a.restoreableFiles = append(a.restoreableFiles, elem)
-	}
+func (a *VaultDiffer) MatchFiles() <-chan string {
+	processedFiles := make(chan string)
+	go func() {
+		for _, pattern := range a.secrets {
+			for _, file := range helpers.FileList(pattern, a.logLevel) {
+				processedFiles <- file
+			}
+		}
+		close(processedFiles)
+	}()
+	return processedFiles
 
 }
 
-// Clean restores the list of restorables
-func (a *VaultDiffer) Clean() {
-	c := make(chan bool, 100000)
-	var m sync.RWMutex
-	var wg sync.WaitGroup
-	for _, elem := range a.restoreableFiles {
-		wg.Add(1)
-		go utils.GitRestoreCommands(elem, c, &wg, a.logLevel, &m)
-	}
-	wg.Wait()
-	close(c)
+func (a *VaultDiffer) Clean(files <-chan string) <-chan string {
+	processedFiles := make(chan string)
+	go func() {
+		restorableFiles := []string{}
+		for file := range files {
+			restorableFiles = append(restorableFiles, file)
+			processedFiles <- file
+		}
+		if len(restorableFiles) > 0 {
+			log.Debugf("cleaning file: %s", files)
+			helpers.GitRestoreCommands(restorableFiles, a.logLevel)
+		}
+		close(processedFiles)
+	}()
+	return processedFiles
+}
+
+func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
+	processedFiles := make(chan string)
+	go func() {
+		var wg sync.WaitGroup
+		for file := range files {
+			wg.Add(1)
+			go func(file string) {
+				defer wg.Done()
+				out, _ := helpers.GitDiffCommands(file, a.logLevel)
+				if len(out) == 0 {
+					processedFiles <- file
+				}
+			}(file)
+		}
+		wg.Wait()
+		close(processedFiles)
+	}()
+	return processedFiles
 }
 
 // Encrypt all files
-func (a *VaultDiffer) Encrypt() {
-	c := make(chan bool, 100000)
-	var wg sync.WaitGroup
-	var m sync.RWMutex
-	for _, elem := range a.matchedFiles {
-		wg.Add(1)
-		go utils.VaultToolCmd(elem, &wg, a.vaultTool, a.encryptArgs, c, &m)
-	}
-	wg.Wait()
-	close(c)
+func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
+	processedFiles := make(chan string)
+	go func() {
+		var wg sync.WaitGroup
+		for file := range files {
+			wg.Add(1)
+			go func(file string) {
+				defer wg.Done()
+				helpers.VaultToolCmd(a.vaultTool, a.encryptArgs, file)
+				processedFiles <- file
+			}(file)
+		}
+		wg.Wait()
+		close(processedFiles)
+	}()
+	return processedFiles
 }
 
 // Decrypt all files
-func (a *VaultDiffer) Decrypt() {
-	c := make(chan bool, 100000)
-	var wg sync.WaitGroup
-	var m sync.RWMutex
-	for _, elem := range a.matchedFiles {
-		wg.Add(1)
-		go utils.VaultToolCmd(elem, &wg, a.vaultTool, a.decryptArgs, c, &m)
-	}
-	wg.Wait()
-	close(c)
+func (a *VaultDiffer) Decrypt(files <-chan string) <-chan string {
+	processedFiles := make(chan string)
+
+	go func() {
+		var wg sync.WaitGroup
+		for file := range files {
+			wg.Add(1)
+			go func(file string) {
+				defer wg.Done()
+				helpers.VaultToolCmd(a.vaultTool, a.decryptArgs, file)
+				processedFiles <- file
+			}(file)
+		}
+
+		wg.Wait()
+		close(processedFiles)
+	}()
+	return processedFiles
 }

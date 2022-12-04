@@ -18,13 +18,16 @@ var encryptCmd = &cobra.Command{
 }
 
 var encryptCmdRun = func(cmd *cobra.Command, args []string) {
-	vaultInstance.MatchFiles()
+	matchedFiles := vaultInstance.MatchFiles()
 	if len(vaultInstance.GetEncryptArgs()) == 0 || vaultInstance.GetVaultCommand() == "" {
 		log.Fatal("vault tool not defined properly")
-	} else {
-		vaultInstance.Encrypt()
-		vaultInstance.Differ()
-		vaultInstance.Clean()
+	}
+	encryptedFiles := vaultInstance.Encrypt(matchedFiles)
+	restorableFiles := vaultInstance.Differ(encryptedFiles)
+	restoredFiles := vaultInstance.Clean(restorableFiles)
+
+	for file := range restoredFiles {
+		log.Debugf("encrypted file:", file)
 	}
 
 }

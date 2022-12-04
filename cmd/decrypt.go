@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -18,10 +20,16 @@ var decryptCmd = &cobra.Command{
 }
 
 var decryptCmdRun = func(cmd *cobra.Command, args []string) {
-	vaultInstance.MatchFiles()
+
+	matchedFiles := vaultInstance.MatchFiles()
 	if len(vaultInstance.GetEncryptArgs()) == 0 || vaultInstance.GetVaultCommand() == "" {
 		log.Fatalf("vault tools not defined properly")
-	} else {
-		vaultInstance.Decrypt()
+		os.Exit(1)
 	}
+	decryptedFiles := vaultInstance.Decrypt(matchedFiles)
+
+	for file := range decryptedFiles {
+		log.Debugf("decrypted file:", file)
+	}
+
 }

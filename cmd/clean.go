@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +17,10 @@ var cleanCmd = &cobra.Command{
 }
 
 var cleanCmdRun = func(cmd *cobra.Command, args []string) {
-	vaultInstance.MatchFiles()
-	vaultInstance.Differ()
-	vaultInstance.Clean()
+	matchedFiles := vaultInstance.MatchFiles()
+	diffedFiles := vaultInstance.Differ(matchedFiles)
+	cleanFiles := vaultInstance.Clean(diffedFiles)
+	for file := range cleanFiles {
+		log.Debugf("cleaned file:", file)
+	}
 }
