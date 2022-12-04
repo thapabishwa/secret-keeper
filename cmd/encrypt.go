@@ -27,7 +27,7 @@ var encryptCmdRun = func(cmd *cobra.Command, args []string) {
 	restoredFiles := vaultInstance.Clean(restorableFiles)
 
 	for file := range restoredFiles {
-		log.Debugf("encrypted file:", file)
+		log.Debug("encrypted file:", file)
 	}
 
 }

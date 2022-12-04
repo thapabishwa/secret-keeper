@@ -21,6 +21,6 @@ var cleanCmdRun = func(cmd *cobra.Command, args []string) {
 	diffedFiles := vaultInstance.Differ(matchedFiles)
 	cleanFiles := vaultInstance.Clean(diffedFiles)
 	for file := range cleanFiles {
-		log.Debugf("cleaned file:", file)
+		log.Debug("cleaned file:", file)
 	}
 }

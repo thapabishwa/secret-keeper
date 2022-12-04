@@ -3,6 +3,7 @@ package vault
 import (
 	"sync"
 
+	"github.com/everesthack-incubator/vault-differ/pkg/commander"
 	"github.com/everesthack-incubator/vault-differ/pkg/config"
 	"github.com/everesthack-incubator/vault-differ/pkg/helpers"
 
@@ -45,7 +46,6 @@ func (a *VaultDiffer) InitConfig(config config.Config) {
 	if config.Debug {
 		a.logLevel = log.DebugLevel
 	}
-
 }
 
 // MatchFiles populates list of files that match the pattern provided in the config
@@ -53,7 +53,11 @@ func (a *VaultDiffer) MatchFiles() <-chan string {
 	processedFiles := make(chan string)
 	go func() {
 		for _, pattern := range a.secrets {
-			for _, file := range helpers.FileList(pattern, a.logLevel) {
+			files, err := helpers.FileList(pattern, a.logLevel)
+			if err != nil {
+				log.Error(err)
+			}
+			for _, file := range files {
 				processedFiles <- file
 			}
 		}
@@ -72,8 +76,10 @@ func (a *VaultDiffer) Clean(files <-chan string) <-chan string {
 			processedFiles <- file
 		}
 		if len(restorableFiles) > 0 {
-			log.Debugf("cleaning file: %s", files)
-			helpers.GitRestoreCommands(restorableFiles, a.logLevel)
+			gitRestore, err := commander.GitRestore(restorableFiles)
+			if err != nil {
+				log.Error(err, gitRestore)
+			}
 		}
 		close(processedFiles)
 	}()
@@ -88,7 +94,14 @@ func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
 			wg.Add(1)
 			go func(file string) {
 				defer wg.Done()
-				out, _ := helpers.GitDiffCommands(file, a.logLevel)
+				out, err := commander.GitDiff(file)
+				if err != nil {
+					if a.logLevel == log.DebugLevel {
+						log.Debugf("error diffing file: %s, status code %s, %s", file, err.Error(), string(out))
+					} else {
+						log.Errorf("error diffing file: %s", file)
+					}
+				}
 				if len(out) == 0 {
 					processedFiles <- file
 				}
@@ -109,8 +122,16 @@ func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
 			wg.Add(1)
 			go func(file string) {
 				defer wg.Done()
-				helpers.VaultToolCmd(a.vaultTool, a.encryptArgs, file)
-				processedFiles <- file
+				out, err := commander.Command(a.vaultTool, a.encryptArgs, file)
+				if err != nil {
+					if a.logLevel == log.DebugLevel {
+						log.Debugf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
+					} else {
+						log.Errorf("error decrypting file: %s", file)
+					}
+				} else {
+					processedFiles <- file
+				}
 			}(file)
 		}
 		wg.Wait()
@@ -129,8 +150,16 @@ func (a *VaultDiffer) Decrypt(files <-chan string) <-chan string {
 			wg.Add(1)
 			go func(file string) {
 				defer wg.Done()
-				helpers.VaultToolCmd(a.vaultTool, a.decryptArgs, file)
-				processedFiles <- file
+				out, err := commander.Command(a.vaultTool, a.decryptArgs, file)
+				if err != nil {
+					if a.logLevel == log.DebugLevel {
+						log.Debugf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
+					} else {
+						log.Errorf("error decrypting file: %s", file)
+					}
+				} else {
+					processedFiles <- file
+				}
 			}(file)
 		}
 
