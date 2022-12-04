@@ -22,11 +22,11 @@ Available Commands:
 ## Configuration
 - sample `.gitattribute` file
   ```
-  *.tfvars diff=ansiblevaultdiffer
+  *.tfvars diff=vaultdiffer
   ```
 - Run the following to add a git config **(Fix the script a/c to your need)**
   ```bash
-  git config diff.ansiblevaultdiffer.textconv "ansible-vault view --vault-password-file ~/.vault_password_file "
+  git config diff.vaultdiffer.textconv "ansible-vault view --vault-password-file ~/.vault_password_file "
   ```
 - Contents of config.yaml inside the repository you want to work with. 
   ```yaml
@@ -38,6 +38,64 @@ Available Commands:
   encrypt_args: ["encrypt", "--vault-password-file", "~/.vault-password-file"] ## arguments used to encrypt (and clean) the secrets
   decrypt_args: ["decrypt", "--vault-password-file", "~/.vault-password-file"] ## arguments used to decrypt the secrets 
   ```
+## Improvements
+- [x] Improved the code to increase the performance by ~3x while decrypting, cleaning, and encrypting secrets
+- [x] Git lock causes the restore process to fail. Added a better mechanism to handle this 
+### Before
+```
+bash-3.2$ time go run ./.. encrypt
+
+real    0m3.420s
+user    0m2.554s
+sys     0m0.736s
+
+bash-3.2$ time go run ./.. decrypt
+
+real    0m3.018s
+user    0m2.465s
+sys     0m0.568s
+
+bash-3.2$ time go run ./.. clean
+
+real    0m1.399s
+user    0m0.392s
+sys     0m0.386s
+```
+
+### After
+```
+bash-3.2$ time go run ./.. encrypt
+
+real    0m1.506s
+user    0m3.429s
+sys     0m0.878s
+
+bash-3.2$ time go run ./.. decrypt
+
+real    0m0.905s
+user    0m3.458s
+sys     0m0.790s
+
+
+bash-3.2$ time go run ./.. clean
+
+real    0m0.837s
+user    0m0.385s
+sys     0m0.362s
+```
+
+## Future Improvements 
+- [ ] Add support for multiple vault tools
+- [ ] Add support for multiple git attributes
+- [ ] Add support for multiple git config
+- [ ] Add support for multiple config files
+- [ ] Add support for multiple repositories
+- [ ] Add support for multiple branches
+- [ ] Add support for multiple commits
+- [ ] Add support for multiple files
+- [ ] Add support for multiple secrets
+- [ ] Add support for multiple secret types
+
 ## Contributors ✨
 
 Thanks goes to these wonderful people:
