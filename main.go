@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/everesthack-incubator/vault-differ/cmd"
+	"github.com/everesthack-incubator/secret-keeper/cmd"
 )
 
 func main() {

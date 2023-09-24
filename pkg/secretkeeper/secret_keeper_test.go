@@ -1,4 +1,4 @@
-package vault
+package secretkeeper
 
 import (
 	"errors"
@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/everesthack-incubator/vault-differ/pkg/commander"
-	"github.com/everesthack-incubator/vault-differ/pkg/config"
+	"github.com/everesthack-incubator/secret-keeper/pkg/commander"
+	"github.com/everesthack-incubator/secret-keeper/pkg/config"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -36,22 +36,22 @@ func (sc FakeCommander) CombinedOutput() ([]byte, error) {
 func TestNewVaultDiffer(t *testing.T) {
 	tests := []struct {
 		name string
-		want *VaultDiffer
+		want *SecretKeeper
 	}{
 		{
 			name: "TestNewVaultDiffer",
-			want: &VaultDiffer{
-				secrets:     nil,
-				logLevel:    0x0,
-				vaultTool:   "",
-				encryptArgs: nil,
-				decryptArgs: nil,
+			want: &SecretKeeper{
+				filePatterns: nil,
+				logLevel:     0x0,
+				vaultTool:    "",
+				encryptArgs:  nil,
+				decryptArgs:  nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewVaultDiffer(); !reflect.DeepEqual(got, tt.want) {
+			if got := NewSecretKeeper(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewVaultDiffer() = %+#v, want %+#v", got, tt.want)
 			}
 		})
@@ -85,12 +85,12 @@ func TestVaultDiffer_GetEncryptArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			if got := a.GetEncryptArgs(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("VaultDiffer.GetEncryptArgs() = %v, want %v", got, tt.want)
@@ -126,12 +126,12 @@ func TestVaultDiffer_GetDecryptArgs(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			if got := a.GetDecryptArgs(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("VaultDiffer.GetDecryptArgs() = %v, want %v", got, tt.want)
@@ -167,12 +167,12 @@ func TestVaultDiffer_GetVaultCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			if got := a.GetVaultCommand(); got != tt.want {
 				t.Errorf("VaultDiffer.GetVaultCommand() = %v, want %v", got, tt.want)
@@ -196,7 +196,7 @@ func TestVaultDiffer_InitConfig(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *VaultDiffer
+		want   *SecretKeeper
 	}{
 		{
 			name: "TestInitConfig",
@@ -209,25 +209,25 @@ func TestVaultDiffer_InitConfig(t *testing.T) {
 			},
 			args: args{
 				config: config.Config{
-					VaultTool:   "ansible-vault",
-					Debug:       true,
-					Secrets:     []string{"*.vault.yml"},
-					EncryptArgs: []string{"encrypt", "-field", "value", "-format", "json"},
-					DecryptArgs: []string{"decrypt", "-field", "value", "-format", "json"},
+					VaultTool:    "ansible-vault",
+					Debug:        true,
+					FilePatterns: []string{"*.vault.yml"},
+					EncryptArgs:  []string{"encrypt", "-field", "value", "-format", "json"},
+					DecryptArgs:  []string{"decrypt", "-field", "value", "-format", "json"},
 				},
 			},
-			want: &VaultDiffer{
-				secrets:     []string{"*.vault.yml"},
-				logLevel:    log.DebugLevel,
-				vaultTool:   "ansible-vault",
-				encryptArgs: []string{"encrypt", "-field", "value", "-format", "json"},
-				decryptArgs: []string{"decrypt", "-field", "value", "-format", "json"},
+			want: &SecretKeeper{
+				filePatterns: []string{"*.vault.yml"},
+				logLevel:     log.DebugLevel,
+				vaultTool:    "ansible-vault",
+				encryptArgs:  []string{"encrypt", "-field", "value", "-format", "json"},
+				decryptArgs:  []string{"decrypt", "-field", "value", "-format", "json"},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{}
+			a := &SecretKeeper{}
 			a.InitConfig(tt.args.config)
 			if !reflect.DeepEqual(a, tt.want) {
 				t.Errorf("VaultDiffer.InitConfig() = %v, want %v", a, tt.want)
@@ -258,17 +258,17 @@ func TestVaultDiffer_MatchFiles(t *testing.T) {
 				encryptArgs: nil,
 				decryptArgs: nil,
 			},
-			want: []string{"vault.go", "vault_test.go"},
+			want: []string{"secret_keeper.go", "secret_keeper_test.go"},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			ch := a.MatchFiles()
 			got := getValues(ch)
@@ -285,6 +285,9 @@ func TestVaultDiffer_Clean(t *testing.T) {
 	defer func() { commander.ExecCommander = fakeExecCommander }()
 	commander.ExecCommander = func(command string, args []string, filename interface{}) commander.Runner {
 		fmt.Printf("exec.Command() for %v called with %v, %v, and %v\n", t.Name(), command, args, filename)
+
+		// convert filename to string only
+
 		return FakeCommander{
 			CombinedOutputFunc: func() ([]byte, error) {
 				// return error at random
@@ -292,7 +295,13 @@ func TestVaultDiffer_Clean(t *testing.T) {
 					return []byte{}, nil
 				}
 				go func() {
-					passedFileChannel <- filename.([]string)
+					// check type of filename
+					switch f := filename.(type) {
+					case string:
+						passedFileChannel <- []string{f}
+					default:
+						passedFileChannel <- filename.([]string)
+					}
 				}()
 				return []byte{}, errors.New("error")
 			},
@@ -311,7 +320,7 @@ func TestVaultDiffer_Clean(t *testing.T) {
 
 	channel := make(chan string)
 
-	glob, _ := filepath.Glob("../*/*.go")
+	glob, _ := filepath.Glob("*.go")
 
 	go func(files []string) {
 		for _, file := range files {
@@ -343,12 +352,12 @@ func TestVaultDiffer_Clean(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			ch := a.Clean(tt.args.files)
 			got := getValues(ch)
@@ -431,12 +440,12 @@ func TestVaultDiffer_Differ(t *testing.T) {
 		}(i)
 
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			ch := a.Differ(tt.args.files)
 			got := getValues(ch)
@@ -450,7 +459,6 @@ func TestVaultDiffer_Differ(t *testing.T) {
 }
 
 func TestVaultDiffer_Encrypt(t *testing.T) {
-
 	fakeExecCommander := commander.ExecCommander
 	passedFileChannel := make(chan string)
 	defer func() { commander.ExecCommander = fakeExecCommander }()
@@ -522,12 +530,12 @@ func TestVaultDiffer_Encrypt(t *testing.T) {
 		}(i)
 
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			ch := a.Encrypt(tt.args.files)
 			got := getValues(ch)
@@ -542,7 +550,6 @@ func TestVaultDiffer_Encrypt(t *testing.T) {
 }
 
 func TestVaultDiffer_Decrypt(t *testing.T) {
-
 	fakeExecCommander := commander.ExecCommander
 	passedFileChannel := make(chan string)
 	defer func() { commander.ExecCommander = fakeExecCommander }()
@@ -613,12 +620,12 @@ func TestVaultDiffer_Decrypt(t *testing.T) {
 			}
 		}(i)
 		t.Run(tt.name, func(t *testing.T) {
-			a := &VaultDiffer{
-				secrets:     tt.fields.secrets,
-				logLevel:    tt.fields.logLevel,
-				vaultTool:   tt.fields.vaultTool,
-				encryptArgs: tt.fields.encryptArgs,
-				decryptArgs: tt.fields.decryptArgs,
+			a := &SecretKeeper{
+				filePatterns: tt.fields.secrets,
+				logLevel:     tt.fields.logLevel,
+				vaultTool:    tt.fields.vaultTool,
+				encryptArgs:  tt.fields.encryptArgs,
+				decryptArgs:  tt.fields.decryptArgs,
 			}
 			ch := a.Decrypt(tt.args.files)
 			got := getValues(ch)

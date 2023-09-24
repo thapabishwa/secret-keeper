@@ -5,8 +5,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/everesthack-incubator/vault-differ/pkg/config"
-	"github.com/everesthack-incubator/vault-differ/pkg/vault"
+	"github.com/everesthack-incubator/secret-keeper/pkg/config"
+	"github.com/everesthack-incubator/secret-keeper/pkg/secretkeeper"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,12 +17,12 @@ var (
 	cfgFile string
 
 	rootCmd = &cobra.Command{
-		Use:   "vault-differ",
+		Use:   "secret-keeper",
 		Short: "A tool to manage vault secrets",
-		Long:  `vault-differ is a CLI tool that complements tools like ansible-vault, sops and more. It helps in managing and storing secrets in git-based repositories.`,
+		Long:  `secret-keeper is a CLI tool that complements tools like ansible-vault, sops and more. It helps in managing and storing secrets in git-based repositories.`,
 	}
 
-	vaultInstance  = vault.NewVaultDiffer()
+	vaultInstance  = secretkeeper.NewSecretKeeper()
 	configurations = config.NewConfig()
 )
 
@@ -32,27 +32,24 @@ func Execute() error {
 }
 
 func init() {
-
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ansible-vault-differ/config.yaml)")
-
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.secret-keeper/config.secret-keeper.yaml)")
 }
 
 func initConfig() {
-
 	log.SetOutput(os.Stdout)
 
 	// set config type to yaml
 	viper.SetConfigType("yaml")
 	// search for config in /etc/
-	viper.AddConfigPath("/etc/vault-differ/")
+	viper.AddConfigPath("/etc/secret-keeper/")
 	// search for config in home dir
-	viper.AddConfigPath("$HOME/.vault-differ/")
+	viper.AddConfigPath("$HOME/.secret-keeper/")
 	// search for config in current dir
 	viper.AddConfigPath(".")
 	// config file name
-	viper.SetConfigName("config")
+	viper.SetConfigName("config.secret-keeper")
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -66,11 +63,9 @@ func initConfig() {
 	}
 
 	err := viper.Unmarshal(configurations)
-
 	if err != nil {
 		log.Fatal("cannot unmarshal config file")
 	}
 
 	vaultInstance.InitConfig(*configurations)
-
 }

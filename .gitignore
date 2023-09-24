@@ -1,7 +1,7 @@
-ansible-vault-differ
+ansible-secret-keeper
 .idea/
 config.yaml
 .vscode/
-vault-differ
+secret-keeper
 saas-infrastructure/
 *.out

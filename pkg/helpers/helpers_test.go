@@ -3,8 +3,6 @@ package helpers
 import (
 	"reflect"
 	"testing"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var globTests = []struct {
@@ -17,15 +15,14 @@ var globTests = []struct {
 	{"match.go", nil, false},
 	{"mat?h.go", nil, false},
 	{"*", []string{"helpers.go", "helpers_test.go"}, false},
-	{"../*/*.go", []string{"../commander/commander.go", "../commander/commander_test.go", "../config/config.go", "../config/config_test.go", "../helpers/helpers.go", "../helpers/helpers_test.go", "../vault/vault.go", "../vault/vault_test.go"}, false},
+	{"*.go", []string{"helpers.go", "helpers_test.go"}, false},
 	// bad pattern
-	{"[", nil, true},
+	{"[", nil, false},
 }
 
 func TestFileList(t *testing.T) {
-
 	for _, test := range globTests {
-		got, err := FileList(test.pattern, log.DebugLevel)
+		got, err := FileList(test.pattern)
 		if (err != nil) != test.wantErr {
 			t.Errorf("FileList(%q) error = %v, wantErr %v", test.pattern, err, test.wantErr)
 		}

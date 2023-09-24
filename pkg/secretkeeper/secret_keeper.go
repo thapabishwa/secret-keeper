@@ -1,44 +1,44 @@
-package vault
+package secretkeeper
 
 import (
 	"sync"
 
-	"github.com/everesthack-incubator/vault-differ/pkg/commander"
-	"github.com/everesthack-incubator/vault-differ/pkg/config"
-	"github.com/everesthack-incubator/vault-differ/pkg/helpers"
+	"github.com/everesthack-incubator/secret-keeper/pkg/commander"
+	"github.com/everesthack-incubator/secret-keeper/pkg/config"
+	"github.com/everesthack-incubator/secret-keeper/pkg/helpers"
 
 	log "github.com/sirupsen/logrus"
 )
 
-// VaultDiffer represents the config
-type VaultDiffer struct {
-	secrets     []string
-	logLevel    log.Level
-	vaultTool   string
-	encryptArgs []string
-	decryptArgs []string
+// SecretKeeper represents the config
+type SecretKeeper struct {
+	filePatterns []string
+	logLevel     log.Level
+	vaultTool    string
+	encryptArgs  []string
+	decryptArgs  []string
 }
 
-// NewVaultDiffer returns an empty instance of VaultDiffer
-func NewVaultDiffer() *VaultDiffer {
-	return &VaultDiffer{}
+// NewSecretKeeper returns an empty instance of VaultDiffer
+func NewSecretKeeper() *SecretKeeper {
+	return &SecretKeeper{}
 }
 
-func (a *VaultDiffer) GetEncryptArgs() []string {
+func (a *SecretKeeper) GetEncryptArgs() []string {
 	return a.encryptArgs
 }
 
-func (a *VaultDiffer) GetDecryptArgs() []string {
+func (a *SecretKeeper) GetDecryptArgs() []string {
 	return a.decryptArgs
 }
 
-func (a *VaultDiffer) GetVaultCommand() string {
+func (a *SecretKeeper) GetVaultCommand() string {
 	return a.vaultTool
 }
 
 // InitConfig Reads and Updates all config
-func (a *VaultDiffer) InitConfig(config config.Config) {
-	a.secrets = config.Secrets
+func (a *SecretKeeper) InitConfig(config config.Config) {
+	a.filePatterns = config.FilePatterns
 	a.vaultTool = config.VaultTool
 	a.encryptArgs = config.EncryptArgs
 	a.decryptArgs = config.DecryptArgs
@@ -46,32 +46,38 @@ func (a *VaultDiffer) InitConfig(config config.Config) {
 	if config.Debug {
 		a.logLevel = log.DebugLevel
 	}
+	log.SetLevel(a.logLevel)
 }
 
 // MatchFiles populates list of files that match the pattern provided in the config
-func (a *VaultDiffer) MatchFiles() <-chan string {
+func (a *SecretKeeper) MatchFiles() <-chan string {
 	processedFiles := make(chan string)
 	go func() {
-		for _, pattern := range a.secrets {
-			files, err := helpers.FileList(pattern, a.logLevel)
+		for _, pattern := range a.filePatterns {
+			files, err := helpers.FileList(pattern)
+			if a.logLevel == log.DebugLevel {
+				log.Debugf("files matching pattern: %s, %v", pattern, files)
+			}
 			if err != nil {
 				if a.logLevel == log.DebugLevel {
-					log.Error("error getting file list", err, files, pattern, a.secrets)
+					log.Error("error getting file list", err, files, pattern, a.filePatterns)
 				} else {
 					log.Error("error getting file list", err)
 				}
 			}
 			for _, file := range files {
-				processedFiles <- file
+				// Ignore config.secret-keeper.yaml file from being encrypted
+				if file != "config.secret-keeper.yaml" {
+					processedFiles <- file
+				}
 			}
 		}
 		close(processedFiles)
 	}()
 	return processedFiles
-
 }
 
-func (a *VaultDiffer) Clean(files <-chan string) <-chan string {
+func (a *SecretKeeper) Clean(files <-chan string) <-chan string {
 	processedFiles := make(chan string)
 	go func() {
 		restorableFiles := []string{}
@@ -107,7 +113,7 @@ func (a *VaultDiffer) Clean(files <-chan string) <-chan string {
 	return processedFiles
 }
 
-func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
+func (a *SecretKeeper) Differ(files <-chan string) <-chan string {
 	processedFiles := make(chan string)
 	go func() {
 		var wg sync.WaitGroup
@@ -118,9 +124,9 @@ func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
 				out, err := commander.GitDiff(file)
 				if err != nil {
 					if a.logLevel == log.DebugLevel {
-						log.Errorf("error diffing file: %s, status code %s, %s", file, err.Error(), string(out))
+						log.Errorf("error checking diff for file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
-						log.Errorf("error diffing file: %s", file)
+						log.Errorf("error checking diff for file: %s\n%s", file, string(out))
 					}
 				}
 				if len(out) == 0 {
@@ -135,7 +141,7 @@ func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
 }
 
 // Encrypt all files
-func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
+func (a *SecretKeeper) Encrypt(files <-chan string) <-chan string {
 	processedFiles := make(chan string)
 	go func() {
 		var wg sync.WaitGroup
@@ -146,9 +152,9 @@ func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
 				out, err := commander.Command(a.vaultTool, a.encryptArgs, file)
 				if err != nil {
 					if a.logLevel == log.DebugLevel {
-						log.Errorf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
+						log.Errorf("error encrypting file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
-						log.Errorf("error decrypting file: %s", file)
+						log.Errorf("error encrypting file: %s \n%s", file, string(out))
 					}
 				} else {
 					processedFiles <- file
@@ -162,7 +168,7 @@ func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
 }
 
 // Decrypt all files
-func (a *VaultDiffer) Decrypt(files <-chan string) <-chan string {
+func (a *SecretKeeper) Decrypt(files <-chan string) <-chan string {
 	processedFiles := make(chan string)
 
 	go func() {
@@ -176,7 +182,7 @@ func (a *VaultDiffer) Decrypt(files <-chan string) <-chan string {
 					if a.logLevel == log.DebugLevel {
 						log.Errorf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
-						log.Errorf("error decrypting file: %s", file)
+						log.Errorf("error decrypting file: %s\n%s", file, string(out))
 					}
 				} else {
 					processedFiles <- file
