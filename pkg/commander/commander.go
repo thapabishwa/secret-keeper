@@ -60,3 +60,11 @@ func GitLog(files string) ([]byte, error) {
 	}
 	return out, err
 }
+
+func GitConfig(args string) ([]byte, error) {
+	out, err := ExecCommander("git", []string{"config", "diff.secretkeeper.textconv"}, args).CombinedOutput()
+	if err != nil {
+		log.Debugf("error running commands: %s, %s", err, string(out))
+	}
+	return out, err
+}

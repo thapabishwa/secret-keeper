@@ -17,9 +17,9 @@ Secret Keeper offers a number of benefits, including:
 - Reduces the number of unnecessary diffs created in the repo
 
 ## Installation
-```
-go install github.com/everesthack-incubator/secret-keeper@latest
-```
+  ```bash
+  go install github.com/everesthack-incubator/secret-keeper@latest
+  ```
 
 ## Pre-requisite
 - git
@@ -27,56 +27,89 @@ go install github.com/everesthack-incubator/secret-keeper@latest
 
 ## Configuration
 
-- Create a .gitattribute file for each file type that you want to treat as a secret. For example, if you want to treat all .tfvars files as secrets, create a .gitattributes file with the following contents:
+- Inside your repository, create a new `config.secret-keeper.yaml` file and modify it as needed. The following is an example configuration file for Ansible Vault and Sops.
 
-```
-*.tfvars diff=ansible-diff
-```
+  <details>
+  <summary>Ansible Vault</summary>
 
-- Configure Git to use the "ansible-diff" text conversion filter for files with the ".tfvars" extension, modify and execute the following command according to your requirements and tools. 
+  ```yaml
+  secret_files_patterns:
+    # The list of file patterns to treat as secrets in the repository across all folders
+    - "*.tf"
+    - "*.password"
+  vault_tool: "ansible-vault"
+  # The args to encrypt a file in-place using the vault tool
+  encrypt_args:
+    - "encrypt"
+    - "--vault-password-file"
+    - "~/.vault-password-file"
+  # The args to decrypt a file in-place using the vault tool
+  decrypt_args:
+    - "decrypt"
+    - "--vault-password-file"
+    - "~/.vault-password-file"
+  # The args to view secret in the file using the vault tool
+  view_args:
+    - "view"
+    - "--vault-password-file"
+    - "~/.vault-password-file"
+  ```
+  </details>
 
-```
-git config diff.ansible-diff.textconv "ansible-vault view --vault-password-file ~/.vault_password_file "
-```
 
-- Inside your repository, create a new config.secret-keeper.yaml file and modify it as needed.
-```
-secret_files_patterns:
-  # The list of file patterns to treat as secrets in the repository across all folders
-  - "*.tf"
-  - "*.password"
-vault_tool: "ansible-vault"
-encrypt_args:
-  - "encrypt"
-  - "--vault-password-file"
-  - "~/.vault-password-file"
-decrypt_args:
-  - "decrypt"
-  - "--vault-password-file"
-  - "~/.vault-password-file"
-```
-This configuration file controls the behavior of the tool, allowing you to specify which files should be treated as secrets, enable debug mode, and set the encryption and decryption parameters.
+  <details>
+  <summary>Mozilla Sops</summary>
 
-## Usage 
-```
-Usage:
-  secret-keeper [command]
+  ```yaml
+  secret_files_patterns:
+    # The list of file patterns to treat as secrets in the repository across all folders
+    - "*.tf"
+    - "*.password"
+  vault_tool: "sops"
+  # The args to encrypt a file in-place using the vault tool
+  encrypt_args:
+    - "--encrypt"
+    - "--in-place"
+    - "--pgp"
+  # The args to decrypt a file in-place using the vault tool
+  decrypt_args:
+    - "--decrypt"
+    - "--in-place"
+    - "--pgp"
+  # The args to view secret in the file using the vault tool
+  view_args:
+    - "--decrypt"
+    - "--pgp"
+  ```
+  </details>
 
-Available Commands:
-  clean       Removes unchanged secrets from git repositories
-  decrypt     Runs the decrypt command provided in the config file
-  encrypt     Runs the encrypt command provided in the config file
-  help        Help about any command
-```
+
+  This configuration file controls the behavior of the tool, allowing you to specify which files should be treated as secrets, enable debug mode, and set the encryption and decryption parameters.
+
+- After creating the configuration file, initialize the repository with the tool
+  ```
+  secret-keeper init
+  ```
+
+## Usage
+
+- Start using the tool
+  ```
+  secret-keeper encrypt # encrypts all the secrets, if not already encrypted. also cleans the secrets from the git worktree
+
+  secret-keeper clean # cleans the secrets from the git worktree
+  
+  secret-keeper decrypt # decrypts all the secrets, if not already decrypted.
+  ```
 
 ## Improvements
 - [x] Enhance the performance by ~3x while decrypting, cleaning, and encrypting secrets
 - [x] Git lock causes the restore process to fail. Added a better mechanism to handle this
 - [x] Ensure that the new/untracked files are not discarded on the clean command
 - [x] Ensure that adding a new file to the repo does not cause the clean command to fail 
+- [x] Improve the onboarding process
 
 ## Future Improvements 
-- [ ] Improve the onboarding process
 - [ ] Add Support for more secret management tools in the same repo 
 - [ ] Add Support for different types of repositories.
 - [ ] Add the ability to ignore certain files or directories.

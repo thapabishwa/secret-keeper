@@ -7,6 +7,7 @@ type Config struct {
 	VaultTool    string   `mapstructure:"vault_tool"`
 	EncryptArgs  []string `mapstructure:"encrypt_args"`
 	DecryptArgs  []string `mapstructure:"decrypt_args"`
+	ViewArgs     []string `mapstructure:"view_args"`
 }
 
 // NewConfig Returns a New Config
