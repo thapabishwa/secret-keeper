@@ -52,3 +52,11 @@ func GitRestore(files []string) ([]byte, error) {
 	}
 	return out, err
 }
+
+func GitLog(files string) ([]byte, error) {
+	out, err := ExecCommander("git", []string{"log"}, files).CombinedOutput()
+	if err != nil {
+		log.Debugf("error running commands: %s, %s", err, string(out))
+	}
+	return out, err
+}

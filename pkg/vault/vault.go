@@ -55,7 +55,11 @@ func (a *VaultDiffer) MatchFiles() <-chan string {
 		for _, pattern := range a.secrets {
 			files, err := helpers.FileList(pattern, a.logLevel)
 			if err != nil {
-				log.Error(err)
+				if a.logLevel == log.DebugLevel {
+					log.Error("error getting file list", err, files, pattern, a.secrets)
+				} else {
+					log.Error("error getting file list", err)
+				}
 			}
 			for _, file := range files {
 				processedFiles <- file
@@ -72,15 +76,32 @@ func (a *VaultDiffer) Clean(files <-chan string) <-chan string {
 	go func() {
 		restorableFiles := []string{}
 		for file := range files {
-			restorableFiles = append(restorableFiles, file)
-			processedFiles <- file
-		}
-		if len(restorableFiles) > 0 {
-			gitRestore, err := commander.GitRestore(restorableFiles)
+			exists, err := commander.GitLog(file)
 			if err != nil {
-				log.Error(err, gitRestore)
+				if a.logLevel == log.DebugLevel {
+					log.Errorf("error running git log on file: %s, status code %s, %s", file, err.Error(), string(exists))
+				} else {
+					log.Errorf("error cleaning file: %s", file)
+				}
+			}
+			if len(exists) > 0 {
+				restorableFiles = append(restorableFiles, file)
+				processedFiles <- file
 			}
 		}
+
+		if len(restorableFiles) > 0 {
+			log.Infof("restoring file: %v to previous state as they were not changed", restorableFiles)
+			output, err := commander.GitRestore(restorableFiles)
+			if err != nil {
+				if a.logLevel == log.DebugLevel {
+					log.Errorf("error restoring files: %s, status code %s, %s", restorableFiles, err.Error(), string(output))
+				} else {
+					log.Errorf("error restoring files: %s", restorableFiles)
+				}
+			}
+		}
+
 		close(processedFiles)
 	}()
 	return processedFiles
@@ -97,7 +118,7 @@ func (a *VaultDiffer) Differ(files <-chan string) <-chan string {
 				out, err := commander.GitDiff(file)
 				if err != nil {
 					if a.logLevel == log.DebugLevel {
-						log.Debugf("error diffing file: %s, status code %s, %s", file, err.Error(), string(out))
+						log.Errorf("error diffing file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
 						log.Errorf("error diffing file: %s", file)
 					}
@@ -125,7 +146,7 @@ func (a *VaultDiffer) Encrypt(files <-chan string) <-chan string {
 				out, err := commander.Command(a.vaultTool, a.encryptArgs, file)
 				if err != nil {
 					if a.logLevel == log.DebugLevel {
-						log.Debugf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
+						log.Errorf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
 						log.Errorf("error decrypting file: %s", file)
 					}
@@ -153,7 +174,7 @@ func (a *VaultDiffer) Decrypt(files <-chan string) <-chan string {
 				out, err := commander.Command(a.vaultTool, a.decryptArgs, file)
 				if err != nil {
 					if a.logLevel == log.DebugLevel {
-						log.Debugf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
+						log.Errorf("error decrypting file: %s, status code %s, %s", file, err.Error(), string(out))
 					} else {
 						log.Errorf("error decrypting file: %s", file)
 					}
