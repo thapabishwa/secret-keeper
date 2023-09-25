@@ -16,6 +16,10 @@ Secret Keeper offers a number of benefits, including:
 - Improves the security of secrets by reducing the amount of time that they are exposed in cleartext in the git worktree
 - Reduces the number of unnecessary diffs created in the repo
 
+## Demo 
+![](docs/gif/demo.gif)
+
+
 ## Installation
   ```bash
   go install github.com/everesthack-incubator/secret-keeper@latest
