@@ -10,9 +10,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/everesthack-incubator/secret-keeper/pkg/commander"
-	"github.com/everesthack-incubator/secret-keeper/pkg/config"
 	log "github.com/sirupsen/logrus"
+	"github.com/thapabishwa/secret-keeper/pkg/commander"
+	"github.com/thapabishwa/secret-keeper/pkg/config"
 )
 
 func getValues(c <-chan string) []string {

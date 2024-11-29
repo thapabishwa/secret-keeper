@@ -7,8 +7,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/everesthack-incubator/secret-keeper/pkg/config"
-	"github.com/everesthack-incubator/secret-keeper/pkg/secretkeeper"
+	"github.com/thapabishwa/secret-keeper/pkg/config"
+	"github.com/thapabishwa/secret-keeper/pkg/secretkeeper"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

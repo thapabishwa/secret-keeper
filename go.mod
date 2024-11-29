@@ -1,4 +1,4 @@
-module github.com/everesthack-incubator/secret-keeper
+module github.com/thapabishwa/secret-keeper
 
 go 1.21.0
 

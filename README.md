@@ -22,7 +22,7 @@ Secret Keeper offers a number of benefits, including:
 
 ## Installation
   ```bash
-  go install github.com/everesthack-incubator/secret-keeper@latest
+  go install github.com/thapabishwa/secret-keeper@latest
   ```
 
 ## Pre-requisite
@@ -129,8 +129,8 @@ Thanks goes to these wonderful people:
 <!-- markdownlint-disable -->
 <table>
   <tr>
-    <td align="center"><a href="https://www.thapabishwa.de/"><img src="https://avatars1.githubusercontent.com/u/15176360?v=4?s=50" width="50px;" alt=""/><br /><sub><b>Bishwa Thapa</b></sub></a><br /><a href="https://github.com/everesthack-incubator/secret-keeper/commits?author=thapabishwa" title="Code">💻</a> <a href="https://github.com/everesthack-incubator/secret-keeper/commits?author=thapabishwa" title="Documentation">📖</a> <a href="#example-thapabishwa" title="Examples">💡</a> <a href="#ideas-thapabishwa" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-thapabishwa" title="Maintenance">🚧</a> <a href="#platform-thapabishwa" title="Packaging/porting to new platform">📦</a> <a href="#research-thapabishwa" title="Research">🔬</a></td>
-    <td align="center"><a href="https://github.com/Kripesh4569"><img src="https://avatars2.githubusercontent.com/u/11332619?v=4?s=50" width="50px;" alt=""/><br /><sub><b>Kripesh Dhakal</b></sub></a><br /><a href="https://github.com/everesthack-incubator/secret-keeper/issues?q=author%3AKripesh4569" title="Bug reports">🐛</a> <a href="https://github.com/everesthack-incubator/secret-keeper/commits?author=Kripesh4569" title="Code">💻</a> <a href="https://github.com/everesthack-incubator/secret-keeper/commits?author=Kripesh4569" title="Documentation">📖</a> <a href="#example-Kripesh4569" title="Examples">💡</a> <a href="#ideas-Kripesh4569" title="Ideas, Planning, & Feedback">🤔</a> <a href="#platform-Kripesh4569" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/everesthack-incubator/secret-keeper/pulls?q=is%3Apr+reviewed-by%3AKripesh4569" title="Reviewed Pull Requests">👀</a></td>
+    <td align="center"><a href="https://www.thapabishwa.de/"><img src="https://avatars1.githubusercontent.com/u/15176360?v=4?s=50" width="50px;" alt=""/><br /><sub><b>Bishwa Thapa</b></sub></a><br /><a href="https://github.com/thapabishwa/secret-keeper/commits?author=thapabishwa" title="Code">💻</a> <a href="https://github.com/thapabishwa/secret-keeper/commits?author=thapabishwa" title="Documentation">📖</a> <a href="#example-thapabishwa" title="Examples">💡</a> <a href="#ideas-thapabishwa" title="Ideas, Planning, & Feedback">🤔</a> <a href="#maintenance-thapabishwa" title="Maintenance">🚧</a> <a href="#platform-thapabishwa" title="Packaging/porting to new platform">📦</a> <a href="#research-thapabishwa" title="Research">🔬</a></td>
+    <td align="center"><a href="https://github.com/Kripesh4569"><img src="https://avatars2.githubusercontent.com/u/11332619?v=4?s=50" width="50px;" alt=""/><br /><sub><b>Kripesh Dhakal</b></sub></a><br /><a href="https://github.com/thapabishwa/secret-keeper/issues?q=author%3AKripesh4569" title="Bug reports">🐛</a> <a href="https://github.com/thapabishwa/secret-keeper/commits?author=Kripesh4569" title="Code">💻</a> <a href="https://github.com/thapabishwa/secret-keeper/commits?author=Kripesh4569" title="Documentation">📖</a> <a href="#example-Kripesh4569" title="Examples">💡</a> <a href="#ideas-Kripesh4569" title="Ideas, Planning, & Feedback">🤔</a> <a href="#platform-Kripesh4569" title="Packaging/porting to new platform">📦</a> <a href="https://github.com/thapabishwa/secret-keeper/pulls?q=is%3Apr+reviewed-by%3AKripesh4569" title="Reviewed Pull Requests">👀</a></td>
   </tr>
 </table>
 

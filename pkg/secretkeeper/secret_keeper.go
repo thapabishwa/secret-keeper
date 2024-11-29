@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/everesthack-incubator/secret-keeper/pkg/commander"
-	"github.com/everesthack-incubator/secret-keeper/pkg/config"
-	"github.com/everesthack-incubator/secret-keeper/pkg/helpers"
+	"github.com/thapabishwa/secret-keeper/pkg/commander"
+	"github.com/thapabishwa/secret-keeper/pkg/config"
+	"github.com/thapabishwa/secret-keeper/pkg/helpers"
 
 	log "github.com/sirupsen/logrus"
 )
