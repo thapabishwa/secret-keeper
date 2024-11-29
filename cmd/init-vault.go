@@ -26,4 +26,9 @@ var initCmdRun = func(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = vaultInstance.AddPreCommitHook()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

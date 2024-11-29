@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"os"
+	"os/exec"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -45,9 +47,21 @@ func initConfig() {
 	// search for config in /etc/
 	viper.AddConfigPath("/etc/secret-keeper/")
 	// search for config in home dir
-	viper.AddConfigPath("$HOME/.secret-keeper/")
-	// search for config in current dir
-	viper.AddConfigPath(".")
+
+	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
+	output, err := cmd.Output()
+	if err != nil {
+		log.Println("Not inside a Git repoisitory, falling back to default config path")
+		viper.AddConfigPath("$HOME/.secret-keeper/")
+		// search for config in current dir
+		viper.AddConfigPath(".")
+	} else {
+		// Trim output and set the repository root as a config path
+		repoRoot := strings.TrimSpace(string(output))
+		log.Printf("Found Git repository root: %s", repoRoot)
+		viper.AddConfigPath(repoRoot)
+	}
+
 	// config file name
 	viper.SetConfigName("config.secret-keeper")
 	viper.AutomaticEnv()
@@ -62,7 +76,7 @@ func initConfig() {
 		}
 	}
 
-	err := viper.Unmarshal(configurations)
+	err = viper.Unmarshal(configurations)
 	if err != nil {
 		log.Fatal("cannot unmarshal config file")
 	}
